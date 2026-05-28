@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { BsMic, BsCameraVideo, BsDisplay, BsJournalText, BsTelephoneX, BsFileEarmarkText } from 'react-icons/bs';
+import { BsMic, BsCameraVideo, BsDisplay, BsJournalText, BsTelephoneX, BsFileEarmarkText, BsMicMute, BsCameraVideoOff } from 'react-icons/bs';
 import Whiteboard from '../components/Whiteboard';
 import Chat from '../components/Chat';
 import Peer from 'peerjs';
@@ -18,7 +18,7 @@ const VideoPlayer = ({ stream }) => {
       videoRef.current.play().catch(e => console.log("Auto-play prevented", e));
     }
   }, [stream]);
-  return <video ref={videoRef} autoPlay playsInline webkit-playsinline="true" style={{width: '400px', height: '250px', backgroundColor: '#000', borderRadius: '12px', objectFit: 'cover', boxShadow: '0 5px 15px rgba(0,0,0,0.5)'}} />;
+  return <video ref={videoRef} autoPlay playsInline webkit-playsinline="true" style={{width: '100%', height: '100%', backgroundColor: '#000', borderRadius: '12px', objectFit: 'cover', boxShadow: '0 5px 15px rgba(0,0,0,0.5)'}} />;
 };
 
 const RoomNotesModal = ({ isOpen, onClose, roomId, ownerId }) => {
@@ -113,8 +113,11 @@ export default function Room() {
   const [hasJoined, setHasJoined] = useState(false);
   const [isNotesOpen, setIsNotesOpen] = useState(false);
   const [ownerId, setOwnerId] = useState(null);
-  const [showWhiteboard, setShowWhiteboard] = useState(true);
-  const [showChat, setShowChat] = useState(true);
+  const isMobile = window.innerWidth <= 768;
+  const [showWhiteboard, setShowWhiteboard] = useState(!isMobile);
+  const [showChat, setShowChat] = useState(!isMobile);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isVideoOff, setIsVideoOff] = useState(false);
 
   useEffect(() => {
     // Fetch room details to check ownership
@@ -132,6 +135,20 @@ export default function Room() {
   const myVideoRef = useRef(null);
   const myStreamRef = useRef(null);
   const peerInstance = useRef(null);
+
+  const toggleMute = () => {
+    if (myStreamRef.current) {
+      myStreamRef.current.getAudioTracks().forEach(track => track.enabled = !track.enabled);
+      setIsMuted(!isMuted);
+    }
+  };
+
+  const toggleVideo = () => {
+    if (myStreamRef.current) {
+      myStreamRef.current.getVideoTracks().forEach(track => track.enabled = !track.enabled);
+      setIsVideoOff(!isVideoOff);
+    }
+  };
 
   useEffect(() => {
     if (!hasJoined) return;
@@ -233,17 +250,23 @@ export default function Room() {
     );
   }
 
+  const numVideos = 1 + Object.keys(peers).length;
+  let gridClass = 'videos-more';
+  if (numVideos === 1) gridClass = 'videos-1';
+  else if (numVideos === 2) gridClass = 'videos-2';
+  else if (numVideos <= 4) gridClass = 'videos-3';
+
   return (
     <div className="conference-container">
       {/* Video Area */}
       <div className="video-area">
-         <div className="video-grid" style={{flexWrap: 'wrap', overflowY: 'auto'}}>
+         <div className={`video-grid ${gridClass}`} style={{overflowY: 'auto'}}>
             <video 
               ref={myVideoRef} 
               autoPlay 
               playsInline
               muted 
-              style={{width: '400px', height: '250px', backgroundColor: '#000', borderRadius: '12px', objectFit: 'cover', boxShadow: '0 5px 15px rgba(0,0,0,0.5)', transform: 'scaleX(-1)'}} 
+              style={{width: '100%', height: '100%', backgroundColor: '#000', borderRadius: '12px', objectFit: 'cover', boxShadow: '0 5px 15px rgba(0,0,0,0.5)', transform: 'scaleX(-1)'}} 
             />
             {Object.keys(peers).map(peerId => (
               <VideoPlayer key={peerId} stream={peers[peerId]} />
@@ -251,6 +274,12 @@ export default function Room() {
          </div>
          
          <div className="control-bar">
+            <button className="control-btn" onClick={toggleMute} title="Toggle Audio" style={{backgroundColor: isMuted ? 'rgba(255, 68, 68, 0.5)' : ''}}>
+               {isMuted ? <BsMicMute /> : <BsMic />}
+            </button>
+            <button className="control-btn" onClick={toggleVideo} title="Toggle Video" style={{backgroundColor: isVideoOff ? 'rgba(255, 68, 68, 0.5)' : ''}}>
+               {isVideoOff ? <BsCameraVideoOff /> : <BsCameraVideo />}
+            </button>
             <button className="control-btn" onClick={() => setShowWhiteboard(!showWhiteboard)} title="Toggle Whiteboard" style={{backgroundColor: showWhiteboard ? 'rgba(138, 43, 226, 0.5)' : ''}}>
                <BsDisplay />
             </button>

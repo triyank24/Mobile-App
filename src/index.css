@@ -373,11 +373,32 @@ input:focus {
 
 .video-grid {
   flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
   gap: 20px;
   padding: 20px;
+  width: 100%;
+  height: 100%;
+}
+
+.video-grid.videos-1 {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+
+.video-grid.videos-2 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr;
+}
+
+.video-grid.videos-3,
+.video-grid.videos-4 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+.video-grid.videos-more {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-auto-rows: minmax(200px, 1fr);
 }
 
 .video-placeholder {
@@ -503,18 +524,30 @@ input:focus {
     padding: 20px;
   }
   
+  .video-grid {
+    padding: 10px;
+    gap: 10px;
+  }
+  
+  .video-grid.videos-2 {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+
   .video-placeholder, .video-grid video {
     width: 100% !important;
-    height: auto !important;
-    max-height: 40vh;
+    height: 100% !important;
+    max-height: 100% !important;
   }
   
   .video-area {
-    min-height: 40vh;
+    flex: 1;
+    min-height: 50vh;
   }
   
   .conference-sidebar {
-    min-height: 60vh;
+    flex: 1;
+    min-height: 50vh;
   }
 
   .rooms-grid {
