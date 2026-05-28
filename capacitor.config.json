@@ -1,5 +1,12 @@
 {
   "appId": "com.studyhub.app",
   "appName": "StudyHub",
-  "webDir": "dist"
+  "webDir": "dist",
+  "plugins": {
+    "GoogleAuth": {
+      "scopes": ["profile", "email"],
+      "serverClientId": "1088412470643-uvl7hmhp43n3o2mffohoiq460g6n294n.apps.googleusercontent.com",
+      "forceCodeForRefreshToken": true
+    }
+  }
 }

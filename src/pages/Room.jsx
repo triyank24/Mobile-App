@@ -12,11 +12,13 @@ import { useAuth } from '../context/AuthContext';
 const VideoPlayer = ({ stream }) => {
   const videoRef = useRef();
   useEffect(() => {
-    if (videoRef.current) {
+    if (videoRef.current && stream) {
       videoRef.current.srcObject = stream;
+      // Android/iOS WebViews often require explicit play() for remote WebRTC streams
+      videoRef.current.play().catch(e => console.log("Auto-play prevented", e));
     }
   }, [stream]);
-  return <video ref={videoRef} autoPlay style={{width: '400px', height: '250px', backgroundColor: '#000', borderRadius: '12px', objectFit: 'cover', boxShadow: '0 5px 15px rgba(0,0,0,0.5)'}} />;
+  return <video ref={videoRef} autoPlay playsInline webkit-playsinline="true" style={{width: '400px', height: '250px', backgroundColor: '#000', borderRadius: '12px', objectFit: 'cover', boxShadow: '0 5px 15px rgba(0,0,0,0.5)'}} />;
 };
 
 const RoomNotesModal = ({ isOpen, onClose, roomId, ownerId }) => {
@@ -111,6 +113,8 @@ export default function Room() {
   const [hasJoined, setHasJoined] = useState(false);
   const [isNotesOpen, setIsNotesOpen] = useState(false);
   const [ownerId, setOwnerId] = useState(null);
+  const [showWhiteboard, setShowWhiteboard] = useState(true);
+  const [showChat, setShowChat] = useState(true);
 
   useEffect(() => {
     // Fetch room details to check ownership
@@ -139,8 +143,16 @@ export default function Room() {
         myVideoRef.current.srcObject = stream;
       }
 
-      // Initialize PeerJS
-      const peer = new Peer();
+      // Initialize PeerJS with explicit STUN servers for Mobile NAT traversal
+      const peer = new Peer({
+        config: {
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' }
+          ]
+        }
+      });
       peerInstance.current = peer;
 
       peer.on('open', (id) => {
@@ -229,6 +241,7 @@ export default function Room() {
             <video 
               ref={myVideoRef} 
               autoPlay 
+              playsInline
               muted 
               style={{width: '400px', height: '250px', backgroundColor: '#000', borderRadius: '12px', objectFit: 'cover', boxShadow: '0 5px 15px rgba(0,0,0,0.5)', transform: 'scaleX(-1)'}} 
             />
@@ -238,28 +251,41 @@ export default function Room() {
          </div>
          
          <div className="control-bar">
-            <button className="control-btn"><BsCameraVideo /></button>
-            <button className="control-btn"><BsDisplay /></button>
-            <button className="control-btn"><BsMic /></button>
-            <button className="control-btn" onClick={() => setIsNotesOpen(true)}><BsJournalText /></button>
-            <button className="control-btn danger-btn" onClick={() => setHasJoined(false)}><BsTelephoneX /></button>
+            <button className="control-btn" onClick={() => setShowWhiteboard(!showWhiteboard)} title="Toggle Whiteboard" style={{backgroundColor: showWhiteboard ? 'rgba(138, 43, 226, 0.5)' : ''}}>
+               <BsDisplay />
+            </button>
+            <button className="control-btn" onClick={() => setShowChat(!showChat)} title="Toggle Chat" style={{backgroundColor: showChat ? 'rgba(138, 43, 226, 0.5)' : ''}}>
+               <BsJournalText />
+            </button>
+            <button className="control-btn" onClick={() => setIsNotesOpen(true)} title="Room Notes">
+               <BsFileEarmarkText />
+            </button>
+            <button className="control-btn danger-btn" onClick={() => navigate('/dashboard')} title="Leave Room">
+               <BsTelephoneX />
+            </button>
          </div>
       </div>
 
       {/* Sidebar Area */}
-      <div className="conference-sidebar">
-         <div className="whiteboard-section" style={{height: '50%'}}>
-            <div className="sidebar-header">Whiteboard</div>
-            <div style={{flex: 1, position: 'relative'}}>
-               <Whiteboard roomId={roomId} />
-            </div>
-         </div>
-         
-         <div className="chat-section" style={{height: '50%'}}>
-            <div className="sidebar-header">Chat</div>
-            <Chat roomId={roomId} />
-         </div>
-      </div>
+      {(showWhiteboard || showChat) && (
+        <div className="conference-sidebar" style={{minHeight: '100vh', display: 'flex', flexDirection: 'column'}}>
+           {showWhiteboard && (
+             <div className="whiteboard-section" style={{height: showChat ? '50%' : '100%', flex: showChat ? 'none' : 1, display: 'flex', flexDirection: 'column'}}>
+                <div className="sidebar-header">Whiteboard</div>
+                <div style={{flex: 1, position: 'relative'}}>
+                   <Whiteboard roomId={roomId} />
+                </div>
+             </div>
+           )}
+           
+           {showChat && (
+             <div className="chat-section" style={{height: showWhiteboard ? '50%' : '100%', flex: showWhiteboard ? 'none' : 1, display: 'flex', flexDirection: 'column'}}>
+                <div className="sidebar-header">Chat</div>
+                <Chat roomId={roomId} />
+             </div>
+           )}
+        </div>
+      )}
 
       <RoomNotesModal isOpen={isNotesOpen} onClose={() => setIsNotesOpen(false)} roomId={roomId} ownerId={ownerId} />
     </div>
