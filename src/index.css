@@ -484,3 +484,40 @@ input:focus {
   background-color: #fff;
   border-top: 1px solid #eee;
 }
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .dashboard-container,
+  .conference-container {
+    flex-direction: column;
+  }
+  
+  .sidebar,
+  .conference-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .dashboard-main {
+    padding: 20px;
+  }
+  
+  .video-placeholder, .video-grid video {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 40vh;
+  }
+  
+  .video-area {
+    min-height: 40vh;
+  }
+  
+  .conference-sidebar {
+    min-height: 60vh;
+  }
+
+  .rooms-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -56,7 +56,7 @@ export default function AuthModal({ isOpen, onClose, defaultIsLogin = false, onL
           <input type="password" placeholder="Password" value={password} onChange={e=>setPassword(e.target.value)} required />
           
           <button type="submit" className="btn-primary" style={{width: '100%', marginTop: '10px', marginBottom: '10px'}}>
-            {isLogin ? 'Login' : 'Sign Up / Send OTP'}
+            {isLogin ? 'Login' : 'Sign Up'}
           </button>
         </form>
 
